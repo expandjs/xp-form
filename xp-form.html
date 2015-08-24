@@ -346,7 +346,7 @@ This element is used to add XHR capabilities to the standard HTML form.
                 var self = this;
 
                 // Setting
-                XP.assign(self.$.xpFormRequest, {enctype: self.contentType, method: self.method, url: self.action});
+                XP.assign(self.$.xpFormRequest, {contentType: self.contentType, method: self.method, url: self.action});
 
                 // Observing
                 XP.onMutation(self, self.mutatedAttributes.bind(self), {attributes: true, attributeFilter: ['action', 'content-type', 'method']});
