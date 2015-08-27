@@ -29,14 +29,15 @@ This element is used to add XHR capabilities to the standard HTML form.
 
 <dom-module id="xp-form">
 
-    <style>
-        :host {
-            display: block;
-            overflow: visible;
-        }
-    </style>
-
     <template>
+
+        <style>
+            :host {
+                display: block;
+                overflow: visible;
+            }
+        </style>
+
         <xp-request id="xpFormRequest" data="{{data}}" error="{{error}}" headers="[[headers]]"
                     keep-alive="[[keepAlive]]" path="[[path]]" port="[[port]]" response="{{response}}"
                     state="{{state}}" url="[[url]]" on-xp-request-chunk="_handleEvent"
@@ -44,6 +45,7 @@ This element is used to add XHR capabilities to the standard HTML form.
                     on-xp-request-response="_handleEvent" on-xp-request-state="_handleEvent"
                     on-xp-request-submit="_handleEvent"></xp-request>
         <content id="content"></content>
+
     </template>
 
     <script>
