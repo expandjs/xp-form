@@ -1,9 +1,9 @@
 {
   "name": "xp-form",
   "license": "BSD-3-Clause",
-  "version": "0.9.11",
+  "version": "0.10.0",
   "main": "xp-form.html",
-  "description": "A custom element used to add XHR capabilities to the standard HTML form",
+  "description": "A custom element used to improve the standard HTML form with XHR and validation capabilities",
   "homepage": "http://expandjs.com/elements/xp-form",
   "authors": [
     "Giuliano Rullo <g.rullo@expandjs.com>",
@@ -11,18 +11,21 @@
     "Robert Manolea <r.manolea@expandjs.com>"
   ],
   "keywords": [
-    "web app",
-    "html5",
     "expandjs",
+    "web app",
+    "custom elements",
     "web-components"
   ],
   "ignore": [
     "**/.*"
   ],
   "dependencies": {
-    "expandjs": "ExpandJS/expandjs#0.9.11",
-    "xp-refirer-behavior": "ExpandJS/xp-refirer-behavior#0.9.11",
-    "xp-request": "ExpandJS/xp-request#0.9.11",
-    "polymer": "Polymer/polymer#^1.1.0"
+    "expandjs": "ExpandJS/expandjs#0.10.0",
+    "xp-array-behavior": "ExpandJS/xp-array-behavior#0.10.0",
+    "xp-refirer-behavior": "ExpandJS/xp-refirer-behavior#0.10.0",
+    "xp-request": "ExpandJS/xp-request#0.10.0",
+    "xp-targeter-behavior": "ExpandJS/xp-targeter-behavior#0.10.0",
+    "xp-wrapper-behavior": "ExpandJS/xp-wrapper-behavior#0.10.0",
+    "polymer": "Polymer/polymer#^1.2.0"
   }
 }

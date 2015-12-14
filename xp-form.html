@@ -7,50 +7,58 @@ The complete set of contributors may be found at https://expandjs.github.io/CONT
 -->
 
 <!--
-This element is used to add XHR capabilities to the standard HTML form.
+A custom element used to improve the standard HTML form with XHR and validation capabilities.
+
+It should be used in conjunction with custom inputs which have
+[xp-input-behavior](http://expandjs.com/elements/xp-input-behavior).
 
 @element xp-form
-@description A custom element used to add XHR capabilities to the standard HTML form
-@keywords web app, html5, expandjs, web-components
+@description A custom element used to improve the standard HTML form with XHR and validation capabilities
+@keywords expandjs, web app, custom elements, web-components
 @group inputs
+@hot
+
 @homepage http://expandjs.com/elements/xp-form
 @repository https://github.com/ExpandJS/xp-form
 
 @extends form
-@adapts xp-request /bower_components/xp-request/xp-request.html
+@behavior xp-array-behavior /bower_components/xp-array-behavior/xp-array-behavior.html
 @behavior xp-refirer-behavior /bower_components/xp-refirer-behavior/xp-refirer-behavior.html
+@behavior xp-targeter-behavior /bower_components/xp-targeter-behavior/xp-targeter-behavior.html
 
-@dependency polymer Polymer/polymer#^1.1.0
-@dependency expandjs ExpandJS/expandjs#0.9.11
-@dependency xp-refirer-behavior ExpandJS/xp-refirer-behavior#0.9.11
-@dependency xp-request ExpandJS/xp-request#0.9.11
+@dependency polymer Polymer/polymer#^1.2.0
+@dependency expandjs ExpandJS/expandjs#0.10.0
+@dependency xp-array-behavior ExpandJS/xp-array-behavior#0.10.0
+@dependency xp-refirer-behavior ExpandJS/xp-refirer-behavior#0.10.0
+@dependency xp-request ExpandJS/xp-request#0.10.0
+@dependency xp-targeter-behavior ExpandJS/xp-targeter-behavior#0.10.0
 -->
 
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../expandjs/expandjs.html">
+<link rel="import" href="../xp-array-behavior/xp-array-behavior.html">
 <link rel="import" href="../xp-refirer-behavior/xp-refirer-behavior.html">
 <link rel="import" href="../xp-request/xp-request.html">
+<link rel="import" href="../xp-targeter-behavior/xp-targeter-behavior.html">
 
 <dom-module id="xp-form">
 
-    <template>
+    <template strip-whitespace>
 
         <style>
             :host {
                 display: block;
-                overflow: visible;
             }
         </style>
 
-        <xp-request id="xpFormRequest" content-type="[[contentType]]" data="{{data}}" data-type="[[dataType]]"
-                    error="{{error}}" headers="{{headers}}" hostname="[[hostname]]" keep-alive="[[keepAlive]]"
-                    path="[[path]]" port="[[port]]" protocol="[[protocol]]" state="{{state}}"
-                    status-code="{{statusCode}}" status-message="{{statusMessage}}"
-                    on-xp-request-chunk="_handleStop" on-xp-request-data="_handleRefire"
-                    on-xp-request-error="_handleRefire" on-xp-request-response="_handleStop"
-                    on-xp-request-state="_handleStop" on-xp-request-submit="_handleRefire"></xp-request>
+        <xp-request content-type="[[contentType]]" headers="{{headers}}" hostname="[[hostname]]"
+                    keep-alive="[[keepAlive]]" path="[[path]]" port="[[port]]" protocol="[[protocol]]"
+                    response-type="[[responseType]]" on-xp-request-chunk="_handleStop"
+                    on-xp-request-data="_handleRefire" on-xp-request-error="_handleRefire"
+                    on-xp-request-response="_handleStop" on-xp-request-state="_handleStop"
+                    on-xp-request-submit="_handleRefire"></xp-request>
 
-        <content id="content"></content>
+        <content></content>
 
     </template>
 
@@ -65,13 +73,15 @@ This element is used to add XHR capabilities to the standard HTML form.
 
             // BEHAVIORS
             behaviors: [
-                Polymer.XPRefirerBehavior
+                Polymer.XPArrayBehavior,
+                Polymer.XPRefirerBehavior,
+                Polymer.XPTargeterBehavior
             ],
 
             /*********************************************************************/
 
             /**
-             * Fired when the entire data is received.
+             * Fired when data are received.
              *
              * @event xp-form-data
              * @param {Element} firer
@@ -80,7 +90,7 @@ This element is used to add XHR capabilities to the standard HTML form.
              */
 
             /**
-             * Fired when the entire error is received.
+             * Fired when an error is received.
              *
              * @event xp-form-error
              * @param {Element} firer
@@ -89,20 +99,20 @@ This element is used to add XHR capabilities to the standard HTML form.
              */
 
             /**
-             * Fired when the submit is prevented due to invalid inputs.
+             * Fired when submit is prevented due to invalid inputs.
              *
              * @event xp-form-invalid
              * @param {Element} firer
-             * @param {Object} data
+             * @param {Element} input
              * @bubbles
              */
 
             /**
-             * Fired when the form is about to be submitted.
+             * Fired when data are about to be submitted.
              *
              * @event xp-form-submit
              * @param {Element} firer
-             * @param {*} data
+             * @param {Object} data
              * @bubbles
              * @cancelable
              */
@@ -110,7 +120,7 @@ This element is used to add XHR capabilities to the standard HTML form.
             /*********************************************************************/
 
             /**
-             * Parses all the form's inputs, returning a json object.
+             * Parses the form's inputs.
              *
              * @method parse
              * @returns {Object}
@@ -119,28 +129,14 @@ This element is used to add XHR capabilities to the standard HTML form.
 
                 // Vars
                 var self = this,
-                    json = {};
+                    data = XP.merge(XP.cloneDeep(self.data || {}), XP.formData(Polymer.dom(self)));
 
-                // Parsing
-                XP.forEach(self.elements, function (element) {
-
-                    // Vars
-                    var value = XP.getValue(element, true),
-                        multi = XP.isDefined(value) && element.name.slice(-2) === '[]',
-                        name  = multi ? element.name.slice(0, -2) : element.name;
-
-                    // Checking
-                    if (!name || !XP.isDefined(value)) { return; }
-
-                    // Setting
-                    if (multi) { (json[name] = json[name] || []).push(value); } else { json[name] = value; }
-                });
-
-                return json;
+                // Polishing
+                return XP.merge(data, data, XP.toNull);
             },
 
             /**
-             * Submits the request through XHR.
+             * Submits the form's data through XHR.
              *
              * @method submit
              * @param {Function} [callback]
@@ -149,36 +145,19 @@ This element is used to add XHR capabilities to the standard HTML form.
             submit: function (callback) {
 
                 // Vars
-                var self = this;
+                var self     = this,
+                    target   = self.target ? self.findTarget() : self.request,
+                    validity = !self.noValidate && XP.invoke(XP.map(self.inputs, 'adapter'), 'validate'),
+                    invalid  = !self.noValidate && XP.find(self.inputs, XP.isInvalid);
 
-                // Validating
-                self.validate();
-
-                // Submitting
-                if (!self.invalid) { return self.adaptee.submit(self.parse(), callback); }
+                // Setting
+                self._setInvalid(!!invalid);
 
                 // Firing
-                self.fire('xp-form-invalid', {firer: self, data: self.parse()});
-            },
+                if (invalid) { self.fire('xp-form-invalid', {firer: self, input: invalid}); return null; }
 
-            /**
-             * Validates the form.
-             *
-             * @method validate
-             * @returns {Element}
-             */
-            validate: function () {
-
-                // Vars
-                var self = this;
-
-                // Validating
-                if (!self.noValidate) { XP.invoke(XP.map(self.elements, function (input) { return XP.findParentElement(Polymer.dom(input), '[input=""]', self); }), 'validate'); }
-
-                // Handling
-                self._handleChange();
-
-                return self;
+                // Submitting
+                return target && target.submit(self.parse(), callback);
             },
 
             /*********************************************************************/
@@ -186,27 +165,18 @@ This element is used to add XHR capabilities to the standard HTML form.
             // LISTENERS
             listeners: {
                 'change': '_handleChange',
+                'input': '_handleChange',
                 'submit': '_handleSubmit',
-                'xp-activate': '_handleActivate'
+                'xp-input-change': '_handleChange'
             },
+
+            // OBSERVERS
+            observers: [
+                '_handleChange(inputs.*)'
+            ],
 
             // PROPERTIES
             properties: {
-
-                /**
-                 * The adapted element.
-                 *
-                 * @attribute adaptee
-                 * @type Object
-                 * @notifies
-                 * @readonly
-                 */
-                adaptee: {
-                    notify: true,
-                    readOnly: true,
-                    type: Object,
-                    value: null
-                },
 
                 /**
                  * Content type to be used when sending data.
@@ -216,48 +186,20 @@ This element is used to add XHR capabilities to the standard HTML form.
                  * @default "application/x-www-form-urlencoded"
                  */
                 contentType: {
-                    reflectToAttribute: true,
                     type: String,
                     value: 'application/x-www-form-urlencoded'
                 },
 
                 /**
-                 * The request received data.
+                 * Some data that will be merged with the form's inputs on submit.
                  *
                  * @attribute data
-                 * @type Buffer | string
+                 * @type Object
                  * @notifies
-                 * @readonly
                  */
                 data: {
                     notify: true,
-                    value: null
-                },
-
-                /**
-                 * The type of data expected back from the server.
-                 *
-                 * @attribute data-type
-                 * @type string
-                 */
-                dataType: {
-                    reflectToAttribute: true,
-                    type: String,
-                    value: null
-                },
-
-                /**
-                 * The request error message.
-                 *
-                 * @attribute error
-                 * @type string
-                 * @notifies
-                 * @readonly
-                 */
-                error: {
-                    notify: true,
-                    type: String,
-                    value: null
+                    type: Object
                 },
 
                 /**
@@ -279,13 +221,25 @@ This element is used to add XHR capabilities to the standard HTML form.
                  * @type string
                  */
                 hostname: {
-                    reflectToAttribute: true,
-                    type: String,
-                    value: null
+                    type: String
                 },
 
                 /**
-                 * If set to true, the input's value is not valid.
+                 * The found inputs.
+                 *
+                 * @attribute inputs
+                 * @type Array
+                 * @notifies
+                 * @readonly
+                 */
+                inputs: {
+                    notify: true,
+                    readOnly: true,
+                    value: function () { return []; }
+                },
+
+                /**
+                 * If set to true, an input's value is not valid.
                  *
                  * @attribute invalid
                  * @type boolean
@@ -309,7 +263,6 @@ This element is used to add XHR capabilities to the standard HTML form.
                  * @default 0
                  */
                 keepAlive: {
-                    reflectToAttribute: true,
                     type: Number,
                     value: 0
                 },
@@ -321,9 +274,7 @@ This element is used to add XHR capabilities to the standard HTML form.
                  * @type string
                  */
                 path: {
-                    reflectToAttribute: true,
-                    type: String,
-                    value: null
+                    type: String
                 },
 
                 /**
@@ -333,9 +284,7 @@ This element is used to add XHR capabilities to the standard HTML form.
                  * @type number
                  */
                 port: {
-                    reflectToAttribute: true,
-                    type: Number,
-                    value: null
+                    type: Number
                 },
 
                 /**
@@ -345,50 +294,29 @@ This element is used to add XHR capabilities to the standard HTML form.
                  * @type string
                  */
                 protocol: {
-                    reflectToAttribute: true,
-                    type: String,
-                    value: null
-                },
-
-                /**
-                 * The request state.
-                 *
-                 * @attribute state
-                 * @type string
-                 * @notifies
-                 * @readonly
-                 */
-                state: {
-                    notify: true,
-                    reflectToAttribute: true,
                     type: String
                 },
 
                 /**
-                 * The request status code.
+                 * The form's request.
                  *
-                 * @attribute status-code
-                 * @type number
+                 * @attribute request
+                 * @type Element
                  * @notifies
                  * @readonly
                  */
-                statusCode: {
+                request: {
                     notify: true,
-                    reflectToAttribute: true,
-                    type: Number
+                    readOnly: true
                 },
 
                 /**
-                 * The request status code.
+                 * The type of data expected back from the server.
                  *
-                 * @attribute status-message
+                 * @attribute response-type
                  * @type string
-                 * @notifies
-                 * @readonly
                  */
-                statusMessage: {
-                    notify: true,
-                    reflectToAttribute: true,
+                responseType: {
                     type: String
                 }
             },
@@ -396,29 +324,27 @@ This element is used to add XHR capabilities to the standard HTML form.
             /*********************************************************************/
 
             // LISTENER
-            mutatedAttributes: function () {
+            created: function () {
+
+                // Classifying
+                this.classList.add('form');
+            },
+
+            // LISTENER
+            mutated: function () {
 
                 // Vars
                 var self = this;
 
                 // Setting
-                XP.assign(self.adaptee, {method: self.method, url: self.action});
+                self.request.method = self.method;
+                self.request.url    = self.action;
+
+                // Finding
+                self.overwrite('inputs', XP.getElements(Polymer.dom(self), 'input[name]:not([name=""]):not([type="button"]):not([type="image"]):not([type="reset"]):not([type="submit"]),select[name]:not([name=""]),textarea[name]:not([name=""])'));
 
                 // Observing
-                XP.onMutation(self, self.mutatedAttributes.bind(self), {attributes: true, attributeFilter: ['action', 'method']});
-            },
-
-            // LISTENER
-            mutatedDOM: function () {
-
-                // Vars
-                var self = this;
-
-                // Handling
-                self._handleChange();
-
-                // Observing
-                XP.onMutation(self, self.mutatedDOM.bind(self), {attributes: true, childList: true, subtree: true});
+                XP.onMutation(self, self.mutated.bind(self), {attributes: true, attributeFilter: ['action', 'method', 'name'], childList: true, subtree: true});
             },
 
             // LISTENER
@@ -427,24 +353,20 @@ This element is used to add XHR capabilities to the standard HTML form.
                 // Vars
                 var self = this;
 
-                // Adapting
-                self._setAdaptee(self.$.xpFormRequest);
+                // Setting
+                self._setRequest(Polymer.dom(self.root).querySelector('.request'));
 
                 // Mutating
-                self.mutatedAttributes();
-                self.mutatedDOM();
+                self.mutated();
             },
 
             /*********************************************************************/
 
             // HANDLER
-            _handleActivate: function (event) {
+            _handleChange: function () {
 
-                // Vars
-                var type = event.detail.firer.type;
-
-                // Handling
-                if (type === 'reset' || type === 'submit') { this[type](); }
+                // Setting
+                this._setInvalid(!this.noValidate && !!XP.find(this.inputs, XP.isInvalid));
             },
 
             // HANDLER
@@ -469,13 +391,6 @@ This element is used to add XHR capabilities to the standard HTML form.
 
                 // Overriding
                 this.submit();
-            },
-
-            // HANDLER
-            _handleChange: function () {
-
-                // Setting
-                this._setInvalid(!this.noValidate && !!XP.find(this.elements, XP.isInvalid));
             }
         });
     </script>
