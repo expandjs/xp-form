@@ -59,6 +59,21 @@ A behavior used to add form wrapping capabilities on a custom element.
         properties: {
 
             /**
+             * The form's default data, overridden by the inputs values.
+             *
+             * @attribute form-data
+             * @type Object
+             * @notifies
+             * @readonly
+             */
+            formData: {
+                notify: true,
+                readOnly: true,
+                type: Object,
+                value: function () { return {}; }
+            },
+
+            /**
              * The form element.
              *
              * @attribute form

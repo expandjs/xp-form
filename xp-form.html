@@ -129,7 +129,7 @@ It should be used in conjunction with custom inputs which have
 
                 // Vars
                 var self = this,
-                    data = XP.merge(XP.cloneDeep(self.data || {}), XP.formData(Polymer.dom(self)));
+                    data = XP.merge(XP.cloneDeep(self.formData || {}), XP.formData(Polymer.dom(self)));
 
                 // Polishing
                 return XP.merge(data, data, XP.toNull);
@@ -191,15 +191,16 @@ It should be used in conjunction with custom inputs which have
                 },
 
                 /**
-                 * Some data that will be merged with the form's inputs on submit.
+                 * The form's default data, overridden by the inputs values.
                  *
-                 * @attribute data
+                 * @attribute form-data
                  * @type Object
                  * @notifies
                  */
-                data: {
+                formData: {
                     notify: true,
-                    type: Object
+                    type: Object,
+                    value: function () { return {}; }
                 },
 
                 /**
